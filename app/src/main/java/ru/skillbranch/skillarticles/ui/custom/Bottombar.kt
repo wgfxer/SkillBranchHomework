@@ -12,10 +12,13 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.view.isVisible
+import androidx.viewbinding.ViewBinding
 import ru.skillbranch.skillarticles.ui.custom.behaviors.BottombarBehavior
 import com.google.android.material.shape.MaterialShapeDrawable
 import ru.skillbranch.skillarticles.R
+import ru.skillbranch.skillarticles.databinding.ActivityRootBinding
 import ru.skillbranch.skillarticles.databinding.LayoutBottombarBinding
+import ru.skillbranch.skillarticles.databinding.LayoutSubmenuBinding
 import kotlin.math.hypot
 
 class Bottombar @JvmOverloads constructor(
@@ -24,13 +27,11 @@ class Bottombar @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), CoordinatorLayout.AttachedBehavior {
 
-    val binding: LayoutBottombarBinding
+    val binding = LayoutBottombarBinding.inflate(LayoutInflater.from(context), this)
 
     var isSearchMode = false
 
     init {
-        binding = LayoutBottombarBinding.inflate(LayoutInflater.from(context), this)
-        View.inflate(context, R.layout.layout_bottombar, this)
         val materialBg = MaterialShapeDrawable.createWithElevationOverlay(context)
         materialBg.elevation = elevation
         background = materialBg
@@ -40,7 +41,7 @@ class Bottombar @JvmOverloads constructor(
         return BottombarBehavior()
     }
 
-    override fun onSaveInstanceState(): Parcelable? {
+    override fun onSaveInstanceState(): Parcelable {
         val superState = SavedState(super.onSaveInstanceState())
         superState.ssIsSearchMode = isSearchMode
         return superState
@@ -60,7 +61,6 @@ class Bottombar @JvmOverloads constructor(
         isSearchMode = isSearch
         if (isSearchMode) animateShowSearch() else animateHideSearch()
     }
-
 
     fun setSearchInfo(searchCount: Int = 0, position: Int = 0) {
         with(binding) {

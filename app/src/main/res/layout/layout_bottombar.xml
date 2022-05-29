@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
-
         <ru.skillbranch.skillarticles.ui.custom.CheckableImageView
             android:id="@+id/btn_like"
             style="@style/BottombarIcon"
@@ -65,7 +64,7 @@
                 <ImageView
                     android:id="@+id/btn_search_close"
                     style="@style/BottombarSearchIcon"
-                    android:src="@drawable/ic_close_black_24dp" 
+                    android:src="@drawable/ic_close_black_24dp"
                     tools:tint="@android:color/white"/>
 
                 <TextView
@@ -77,7 +76,7 @@
                     android:layout_gravity="center_vertical"
                     android:textColor="?attr/colorPrimary"
                     tools:textColor="@android:color/white"/>
-                
+
                 <View
                     android:layout_width="0dp"
                     android:layout_height="?attr/actionBarSize"
