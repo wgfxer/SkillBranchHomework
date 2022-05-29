@@ -24,8 +24,7 @@ abstract class BaseViewModel<T>(
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val state: MediatorLiveData<T> = MediatorLiveData<T>().apply {
         val restoredState = savedStateHandle.get<Any>("state")?.let {
-            if (it is Bundle) initState.fromBundle(it)
-            else it as T
+            if (it is Bundle) initState.fromBundle(it) as? T else it as T
         }
         Log.e("BaseViewModel", "handle restore state $restoredState")
         value = restoredState ?: initState
@@ -100,13 +99,6 @@ abstract class BaseViewModel<T>(
     fun saveState() {
         savedStateHandle.set("state", currentState)
     }
-
-    // fun restoreState() {
-    //     val restoredState = savedStateHandle.get<T>("state")
-    //     restoredState ?: return
-    //     state.value = restoredState
-    // }
-
 }
 
 class ViewModelFactory(owner: SavedStateRegistryOwner, private val params: String) : AbstractSavedStateViewModelFactory(owner, bundleOf()) {
@@ -167,7 +159,7 @@ sealed class Notify(val message: String) {
     ) : Notify(msg)
 }
 
-public interface VMState: Serializable {
+interface VMState: Serializable {
     fun toBundle(): Bundle
 
     fun fromBundle(bundle: Bundle): VMState?

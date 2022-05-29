@@ -34,7 +34,6 @@ class PrefDelegate<T>(private val defaultValue: T, private val customKey: String
                         prefs[key] = value
                     }
                 }
-
             }
 
             override fun getValue(thisRef: PrefManager, property: KProperty<*>): T {

@@ -1,6 +1,7 @@
 package ru.skillbranch.skillarticles.viewmodels
 
 import android.os.Bundle
+import android.util.Log
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
@@ -20,6 +21,7 @@ class ArticleViewModel(
     private val repository = ArticleRepository()
 
     init {
+        Log.i("MYTAG", "viewModel hash: ${hashCode()}")
         subscribeOnDataSource(getArticleData()) { article, state ->
             article ?: return@subscribeOnDataSource null
             state.copy(
@@ -105,21 +107,19 @@ class ArticleViewModel(
         updateState { it.copy(isSearch = isSearch, isShowMenu = false, searchPosition = 0) }
     }
 
-    override fun handleSearch(query: String?) {
-        query ?: return
-
-        val result = currentState.content.firstOrNull().toString().indexesOf(query)
+    override fun handleSearch(query: String) {
+        val result = currentState.content.firstOrNull().orEmpty().indexesOf(query)
             .map { it to it + query.length }
 
         updateState { it.copy(searchQuery = query, searchResults = result) }
     }
 
     override fun handleUpResult() {
-        updateState { it.copy(searchPosition = it.searchPosition.inc()) }
+        updateState { it.copy(searchPosition = it.searchPosition.dec()) }
     }
 
     override fun handleDownResult() {
-        updateState { it.copy(searchPosition = it.searchPosition.dec()) }
+        updateState { it.copy(searchPosition = it.searchPosition.inc()) }
     }
 
     override fun handleUpText() {
@@ -136,12 +136,12 @@ class ArticleViewModel(
     }
 }
 
-private fun String.indexesOf(substr: String, ignoreCase: Boolean = true): List<Int> {
-    if (!substr.contains(substr, ignoreCase)) return emptyList()
+fun String.indexesOf(substr: String, ignoreCase: Boolean = true): List<Int> {
+    if (substr.isEmpty() || !substr.contains(substr, ignoreCase)) return emptyList()
     var startIndexForSearch = 0
     val indexes: MutableList<Int> = mutableListOf()
     while(startIndexForSearch < this.length) {
-        val index = substr.indexOf(substr, startIndexForSearch, ignoreCase = ignoreCase)
+        val index = indexOf(substr, startIndexForSearch, ignoreCase = ignoreCase)
         if (index != -1) {
             indexes.add(index)
             startIndexForSearch = index + substr.length
@@ -188,26 +188,26 @@ data class ArticleState(
         val map = bundle.keySet().associateWith { bundle[it] }
         return copy(
             isAuth = map["isAuth"] as Boolean,
-                isLoadingContent = map["isLoadingContent"] as Boolean,
-                isLoadingReviews = map["isLoadingReviews"] as Boolean,
-                isLike = map["isLike"] as Boolean,
-                isBookmark = map["isBookmark"] as Boolean,
-                isShowMenu = map["isShowMenu"] as Boolean,
-                isBigText = map["isBigText"] as Boolean,
-                isDarkMode = map["isDarkMode"] as Boolean,
-                isSearch = map["isSearch"] as Boolean,
-                searchQuery = map["searchQuery"] as String,
-                searchResults = map["searchResults"] as List<Pair<Int, Int>>,
-                searchPosition = map["searchPosition"] as Int,
-                shareLink = map["shareLink"] as String,
-                title = map["title"] as String,
-                category = map["category"] as String,
-                categoryIcon = map["categoryIcon"] as Any,
-                date = map["date"] as String,
-                author = map["author"] as Any,
-                poster = map["poster"] as String,
-                content = map["content"] as List<String>,
-                reviews = map["reviews"] as List<Any>,
+            isLoadingContent = map["isLoadingContent"] as Boolean,
+            isLoadingReviews = map["isLoadingReviews"] as Boolean,
+            isLike = map["isLike"] as Boolean,
+            isBookmark = map["isBookmark"] as Boolean,
+            isShowMenu = map["isShowMenu"] as Boolean,
+            isBigText = map["isBigText"] as Boolean,
+            isDarkMode = map["isDarkMode"] as Boolean,
+            isSearch = map["isSearch"] as Boolean,
+            searchQuery = map["searchQuery"] as String,
+            searchResults = map["searchResults"] as List<Pair<Int, Int>>,
+            searchPosition = map["searchPosition"] as Int,
+            shareLink = map["shareLink"] as String,
+            title = map["title"] as String,
+            category = map["category"] as String,
+            categoryIcon = map["categoryIcon"] as Any,
+            date = map["date"] as String,
+            author = map["author"] as Any,
+            poster = map["poster"] as String,
+            content = map["content"] as List<String>,
+            reviews = map["reviews"] as List<Any>,
         )
     }
 }
