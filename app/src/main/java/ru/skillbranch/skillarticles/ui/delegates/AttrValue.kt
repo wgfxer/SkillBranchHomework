@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.util.TypedValue
 import androidx.annotation.AttrRes
+import ru.skillbranch.skillarticles.extensions.attrValue
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -12,9 +13,7 @@ class AttrValue(@AttrRes private val res: Int): ReadOnlyProperty<Context, Int> {
 
     override fun getValue(thisRef: Context, property: KProperty<*>): Int {
         if (_value == null) {
-            val tv = TypedValue()
-            if (thisRef.theme.resolveAttribute(res, tv, true)) _value = tv.data
-            else throw Resources.NotFoundException("Resource with id $res not found")
+            _value = thisRef.attrValue(res)
         }
         return _value!!
     }

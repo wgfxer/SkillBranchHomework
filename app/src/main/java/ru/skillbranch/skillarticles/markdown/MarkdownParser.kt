@@ -26,12 +26,8 @@ object MarkdownParser {
     /**
      * parse markdown text to elements
      */
-    fun parse(string: String): MarkdownText {
-        val elements = mutableListOf<Element>()
-        val stringBuilder = StringBuilder(string)
-        elements.addAll(findElements(stringBuilder))
-        return MarkdownText(elements)
-    }
+    fun parse(string: String): MarkdownText =
+        MarkdownText(findElements(string))
 
     /**
      * clear markdown text to string without markdown characters
