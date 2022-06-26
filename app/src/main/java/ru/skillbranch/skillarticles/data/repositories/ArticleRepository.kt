@@ -1,6 +1,7 @@
 package ru.skillbranch.skillarticles.data.repositories
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.map
 import ru.skillbranch.skillarticles.data.AppSettings
 import ru.skillbranch.skillarticles.data.ArticleData
 import ru.skillbranch.skillarticles.data.ArticlePersonalInfo
@@ -15,8 +16,8 @@ class ArticleRepository(
 ) {
 
 
-    fun loadArticleContent(articleId: String): LiveData<String?> {
-        return network.loadArticleContent(articleId) //5s delay from network
+    fun loadArticleContent(articleId: String): LiveData<List<MarkdownElement>?> {
+        return network.loadArticleContent(articleId).map { str -> str?.let { MarkdownParser.parse(it) } }
     }
     fun getArticle(articleId: String): LiveData<ArticleData?> {
         return local.findArticle(articleId) //2s delay from db

@@ -1,4 +1,4 @@
-package ru.skillbranch.skillarticles.extensions.data
+package ru.skillbranch.skillarticles.extensions
 
 import ru.skillbranch.skillarticles.data.AppSettings
 import ru.skillbranch.skillarticles.data.ArticlePersonalInfo
@@ -45,3 +45,9 @@ fun User.asMap(): Map<String, Any?> = mapOf(
     "respect"  to respect,
     "about"  to about
 )
+
+fun List<Pair<Int, Int>>.groupByBounds(bounds: List<Pair<Int, Int>>) =
+    bounds.map { parentRange -> this.filter { parentRange.contains(it) } }
+
+private fun Pair<Int, Int>.contains(other: Pair<Int, Int>) =
+    other.first >= this.first && other.second <= this.second && other.first < other.second

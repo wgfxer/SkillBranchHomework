@@ -2,7 +2,7 @@
 <resources>
     <attr name="colorSecondary" />
     <attr name="colorOnSecondary" />
-<!--    <attr name="colorPrimary" />-->
     <attr name="colorOnSurface" />
-    <attr name="colorOnArticleBar" />
+    <attr name="colorOnBackground" />
+    <attr name="colorSurface" />
 </resources>

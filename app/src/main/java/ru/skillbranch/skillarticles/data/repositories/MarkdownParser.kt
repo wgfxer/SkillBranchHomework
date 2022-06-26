@@ -1,75 +1,43 @@
-package ru.skillbranch.skillarticles.markdown
+package ru.skillbranch.skillarticles.data.repositories
 
-import ru.skillbranch.skillarticles.markdown.ParseGroup.BLOCK_CODE_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.BOLD_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.HEADER_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.IMAGE_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.INLINE_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.ITALIC_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.LINK_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.ORDERED_LIST_ITEM_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.QUOTE_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.RULE_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.STRIKE_GROUP
-import ru.skillbranch.skillarticles.markdown.ParseGroup.UNORDERED_LIST_ITEM_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.BLOCK_CODE_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.BOLD_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.HEADER_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.IMAGE_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.INLINE_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.ITALIC_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.LINK_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.ORDERED_LIST_ITEM_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.QUOTE_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.RULE_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.STRIKE_GROUP
+import ru.skillbranch.skillarticles.data.repositories.ParseGroup.UNORDERED_LIST_ITEM_GROUP
 import java.util.regex.Pattern
 
 object MarkdownParser {
-
-    private val LINE_SEPARATOR = "\n"
-
     private val MARKDOWN_GROUPS = ParseGroup.values().toMarkdownGroups()
 
     private val elementsPattern by lazy { Pattern.compile(MARKDOWN_GROUPS, Pattern.MULTILINE) }
-    private val elementsRegex by lazy { elementsPattern.toRegex() }
 
     /**
      * parse markdown text to elements
      */
-    fun parse(string: String): MarkdownText =
-        MarkdownText(findElements(string))
-
-    /**
-     * clear markdown text to string without markdown characters
-     */
-    fun clear(string: String): String {
-        return elementsRegex.replace(string) {
-            it.value.cleared()
+    fun parse(string: String): List<MarkdownElement> {
+        val elements = mutableListOf<Element>()
+        elements.addAll(findElements(string))
+        return elements.fold(mutableListOf()) { acc, element ->
+            val last = acc.lastOrNull()
+            when(element) {
+                is Element.Image -> acc.add(MarkdownElement.Image(element, last?.bounds?.second ?: 0))
+                is Element.BlockCode -> acc.add(MarkdownElement.Scroll(element, last?.bounds?.second ?: 0))
+                else -> {
+                    if (last is MarkdownElement.Text) last.elements.add(element)
+                    else acc.add(MarkdownElement.Text(mutableListOf(element), last?.bounds?.second ?: 0))
+                }
+            }
+            acc
         }
     }
-
-    private fun String.cleared(): String {
-        val parseGroup = ParseGroup.values().find { parseGroup -> parseGroup.regex.matches(this) } ?: return this
-        val clearedString = when(parseGroup) {
-            UNORDERED_LIST_ITEM_GROUP -> this.substring(2)
-            HEADER_GROUP -> {
-                val reg = "^#{1,6}".toRegex().find(this)
-                val level = reg!!.value.length
-                this.substring(level.inc())
-            }
-            QUOTE_GROUP -> this.substring(2)
-            RULE_GROUP -> " "
-            STRIKE_GROUP -> this.substring(2, this.length - 2)
-            INLINE_GROUP -> this.substring(1, this.length - 1)
-            LINK_GROUP -> {
-                val (title:String, _:String) = "\\[(.*)]\\((.*)\\)".toRegex().find(this)!!.destructured
-                title
-            }
-            ITALIC_GROUP -> this.substring(1, this.length - 1)
-            BOLD_GROUP -> this.substring(2, this.length - 2)
-            BLOCK_CODE_GROUP -> this.substring(3, this.length - 3)
-            ORDERED_LIST_ITEM_GROUP -> {
-                val (_, title) = "(^\\d+\\.) (.*)\$".toRegex().find(this)!!.destructured
-                title
-            }
-            else -> this
-        }
-        if (elementsRegex.find(clearedString) != null) {
-            return clear(clearedString)
-        }
-        return clearedString
-    }
-
 
     /**
      * find markdown elements in markdown text
@@ -227,7 +195,37 @@ object MarkdownParser {
     }
 }
 
-data class MarkdownText(val elements: List<Element>)
+sealed class MarkdownElement {
+    abstract val offset: Int
+
+    val bounds: Pair<Int, Int> by lazy {
+        when(this) {
+            is Text -> {
+                val end = elements.fold(offset) { acc, el ->
+                    acc + el.spread().sumOf { it.text.length }
+                }
+                offset to end
+            }
+            is Image -> offset to offset + image.text.length
+            is Scroll -> offset to offset + blockCode.text.length
+        }
+    }
+
+    data class Text(
+        val elements: MutableList<Element>,
+        override val offset: Int = 0
+    ): MarkdownElement()
+
+    data class Image(
+        val image: Element.Image,
+        override val offset: Int = 0
+    ): MarkdownElement()
+
+    data class Scroll(
+        val blockCode: Element.BlockCode,
+        override val offset: Int = 0
+    ): MarkdownElement()
+}
 
 sealed class Element {
     abstract val text: CharSequence
@@ -331,4 +329,38 @@ private fun Array<ParseGroup>.toMarkdownGroups(): String {
         acc.append("${group.expression}$delimiter")
     }
     return result.toString()
+}
+
+private fun Element.spread(): List<Element> {
+    val elements = mutableListOf<Element>()
+    if (this.elements.isNotEmpty()) elements.addAll(this.elements.spread())
+    else elements.add(this)
+    return elements
+}
+
+private fun List<Element>.spread(): List<Element> {
+    val elements = mutableListOf<Element>()
+    forEach { elements.addAll(it.spread()) }
+    return elements
+}
+
+fun List<MarkdownElement>.clearContent(): String {
+    return StringBuilder().apply {
+        this@clearContent.forEach {
+            when(it) {
+                is MarkdownElement.Text -> it.elements.forEach { el -> append(el.clearContent()) }
+                is MarkdownElement.Image -> append(it.image.clearContent())
+                is MarkdownElement.Scroll -> append(it.blockCode.clearContent())
+
+            }
+        }
+    }.toString()
+}
+
+private fun Element.clearContent(): String {
+    return StringBuilder().apply {
+        val element = this@clearContent
+        if (element.elements.isEmpty()) append(element.text)
+        else element.elements.forEach { append(it.clearContent()) }
+    }.toString()
 }
