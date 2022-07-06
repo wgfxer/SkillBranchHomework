@@ -43,8 +43,8 @@ class RootActivity : AppCompatActivity(), IArticleView {
     private lateinit var markdownBuilder: MarkdownBuilder
 
     private val vb: ActivityRootBinding by viewBinding(ActivityRootBinding::inflate)
-    private val vbBottombar
-        get() = vb.bottombar.binding
+    private val bottombar
+        get() = vb.bottombar
     private val vbSubmenu
         get() = vb.submenu.binding
 
@@ -75,7 +75,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
     }
 
     override fun setupBottombar() {
-        with(vbBottombar) {
+        with(bottombar) {
             btnLike.setOnClickListener { viewModel.handleLike() }
             btnBookmark.setOnClickListener { viewModel.handleBookmark() }
             btnShare.setOnClickListener { viewModel.handleShare() }
@@ -182,7 +182,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
     }
 
     override fun renderBotombar(data: BottombarData) {
-        with(vbBottombar) {
+        with(bottombar) {
             btnLike.isChecked = data.isLike
             btnBookmark.isChecked = data.isBookmark
             btnSettings.isChecked = data.isShowMenu
