@@ -30,11 +30,13 @@ fun Context.dpToIntPx(dp: Int): Int {
     ).toInt()
 }
 
-@ColorInt
-fun Context.attrValue(@AttrRes res: Int): Int {
+fun Context.attrValue(@AttrRes res: Int, needRes: Boolean = false): Int {
+    val value: Int?
     val tv = TypedValue()
-    if (this.theme.resolveAttribute(res, tv, true)) return tv.data
+    val resolveAttribute = this.theme.resolveAttribute(res, tv, true)
+    if (resolveAttribute) value = if (needRes) tv.resourceId else tv.data
     else throw Resources.NotFoundException("Resource with id $res not found")
+    return value
 }
 
 val Context.isNetworkAvailable: Boolean

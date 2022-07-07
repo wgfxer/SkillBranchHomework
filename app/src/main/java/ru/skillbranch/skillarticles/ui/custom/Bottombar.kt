@@ -73,7 +73,7 @@ class Bottombar @JvmOverloads constructor(
     }
 
     private fun createShareButton(): AppCompatImageView {
-        val image = AppCompatImageView(context, null, R.style.BottombarIcon)
+        val image = AppCompatImageView(context)
         image.setImageResource(R.drawable.ic_share_black_24dp)
         image.imageTintList = iconTint
         image.setBackgroundResource(R.drawable.ripple)

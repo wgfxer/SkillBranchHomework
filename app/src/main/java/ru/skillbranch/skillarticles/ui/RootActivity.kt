@@ -45,8 +45,8 @@ class RootActivity : AppCompatActivity(), IArticleView {
     private val vb: ActivityRootBinding by viewBinding(ActivityRootBinding::inflate)
     private val bottombar
         get() = vb.bottombar
-    private val vbSubmenu
-        get() = vb.submenu.binding
+    private val submenu
+        get() = vb.submenu
 
     private lateinit var searchView: SearchView
 
@@ -98,7 +98,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
     }
 
     override fun setupSubmenu() {
-        with(vbSubmenu) {
+        with(submenu) {
             btnTextUp.setOnClickListener { viewModel.handleUpText() }
             btnTextDown.setOnClickListener{ viewModel.handleDownText() }
             switchMode.setOnClickListener { viewModel.handleNightMode() }
@@ -217,7 +217,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
     }
 
     override fun renderSubmenu(data: SubmenuData) {
-        with(vbSubmenu) {
+        with(submenu) {
             switchMode.isChecked = data.isDarkMode
             btnTextDown.isChecked = !data.isBigText
             btnTextUp.isChecked = data.isBigText

@@ -97,7 +97,7 @@ abstract class BaseViewModel<T>(
     }
 
     fun saveState() {
-        savedStateHandle.set("state", currentState)
+        //savedStateHandle.set("state", currentState)
     }
 }
 
