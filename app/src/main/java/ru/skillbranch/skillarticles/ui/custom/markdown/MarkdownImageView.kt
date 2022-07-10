@@ -3,8 +3,12 @@ package ru.skillbranch.skillarticles.ui.custom.markdown
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
+import android.os.Parcel
+import android.os.Parcelable
 import android.text.Spannable
+import android.util.Log
 import android.view.*
+import android.view.View.BaseSavedState
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorInt
@@ -234,6 +238,52 @@ class MarkdownImageView private constructor(
         )
         va.doOnEnd { tvAlt?.isVisible = false }
         va.start()
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val superState = super.onSaveInstanceState()
+        Log.i("MYTAG", "markdown save")
+        val savedState = SavedState(superState)
+        savedState.tvAltVisible = tvAlt?.isVisible ?: false
+        return savedState
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        super.onRestoreInstanceState(state)
+        Log.i("MYTAG", "markdown restore")
+        if (state is SavedState) {
+            tvAlt?.isVisible = state.tvAltVisible
+        }
+    }
+
+    private class SavedState: BaseSavedState {
+
+        var tvAltVisible = false
+
+        constructor(parcel: Parcel) : super(parcel) {
+            tvAltVisible = parcel.readInt() == 1
+        }
+
+        constructor(superState: Parcelable?) : super(superState)
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            super.writeToParcel(parcel, flags)
+            parcel.writeInt(if (tvAltVisible) 1 else 0)
+        }
+
+        override fun describeContents(): Int {
+            return 0
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(parcel: Parcel): SavedState {
+                return SavedState(parcel)
+            }
+
+            override fun newArray(size: Int): Array<SavedState?> {
+                return arrayOfNulls(size)
+            }
+        }
     }
 }
 

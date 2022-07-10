@@ -5,8 +5,11 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Parcel
+import android.os.Parcelable
 import android.text.Selection
 import android.text.Spannable
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
@@ -217,5 +220,57 @@ class MarkdownCodeView private constructor(
         ivCopy.imageTintList = ColorStateList.valueOf(textColor)
         (background as GradientDrawable).color = ColorStateList.valueOf(bgColor)
         tvCodeView.setTextColor(textColor)
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        super.onRestoreInstanceState(state)
+        Log.i("MYTAG", "onRestore markdownCodeView")
+        if (state is SavedState) {
+            isDark = state.isDarkMode
+            isManual = state.isManual
+            applyColors()
+        }
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val superState = super.onSaveInstanceState()
+        Log.i("MYTAG", "onSave markdownCodeView")
+        val savedState = SavedState(superState)
+        savedState.isDarkMode = isDark
+        savedState.isManual = isManual
+        return savedState
+    }
+
+    private class SavedState : BaseSavedState {
+
+        var isDarkMode = false
+        var isManual = false
+
+        constructor(parcel: Parcel) : super(parcel) {
+            isDarkMode = parcel.readInt() == 1
+            isManual = parcel.readInt() == 1
+        }
+
+        constructor(superState: Parcelable?) : super(superState)
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            super.writeToParcel(parcel, flags)
+            parcel.writeInt(if (isDarkMode) 1 else 0)
+            parcel.writeInt(if (isManual) 1 else 0)
+        }
+
+        override fun describeContents(): Int {
+            return 0
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(parcel: Parcel): SavedState {
+                return SavedState(parcel)
+            }
+
+            override fun newArray(size: Int): Array<SavedState?> {
+                return arrayOfNulls(size)
+            }
+        }
     }
 }
