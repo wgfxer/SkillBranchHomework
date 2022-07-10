@@ -1,7 +1,11 @@
 package ru.skillbranch.skillarticles.ui.custom.markdown
 
 import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.AttributeSet
+import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.view.children
@@ -83,6 +87,7 @@ class MarkdownContentView @JvmOverloads constructor(
                             left = padding,
                             right = padding
                         )
+                        id = createId()
                     }
 
                     MarkdownBuilder(context)
@@ -101,7 +106,7 @@ class MarkdownContentView @JvmOverloads constructor(
                         it.image.url,
                         it.image.text.toString(),
                         it.image.alt
-                    )
+                    ).apply { id = createId() }
                     addView(iv)
                 }
 
@@ -110,12 +115,33 @@ class MarkdownContentView @JvmOverloads constructor(
                         context,
                         textSize,
                         it.blockCode.text.toString()
-                    )
+                    ).apply { id = createId() }
                     sv.copyListener = copyListener
                     addView(sv)
                 }
             }
         }
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        super.onRestoreInstanceState(state)
+        Log.i("MYTAG","content View restore")
+    }
+
+    override fun onSaveInstanceState(): Parcelable? {
+        Log.i("MYTAG","content View save")
+        return super.onSaveInstanceState()
+    }
+
+    private var index = 0
+
+    private fun createId(): Int {
+        val newId = index++
+        if (rootView.findViewById<View>(newId) != null) {
+            Log.i("MYTAG", "BAD SITUATION")
+        }
+        ids.add(newId)
+        return newId
     }
 
     fun renderSearchResult(searchResult: List<Pair<Int, Int>>) {
@@ -164,5 +190,30 @@ class MarkdownContentView @JvmOverloads constructor(
 
     fun setCopyListener(listener: (String) -> Unit) {
         copyListener = listener
+    }
+
+    private class SavedState : BaseSavedState, Parcelable {
+        var ssIsSearchMode: Boolean = false
+
+        constructor(superState: Parcelable?) : super(superState)
+
+        constructor(parcel: Parcel) : super(parcel) {
+            ssIsSearchMode = parcel.readByte() != 0.toByte()
+        }
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            super.writeToParcel(parcel, flags)
+            parcel.writeByte(if (ssIsSearchMode) 1 else 0)
+        }
+
+        override fun describeContents(): Int {
+            return 0
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(parcel: Parcel) = SavedState(parcel)
+            override fun newArray(size: Int): Array<SavedState?> = arrayOfNulls(size)
+        }
+
     }
 }
