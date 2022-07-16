@@ -14,10 +14,7 @@ import ru.skillbranch.skillarticles.data.repositories.RootRepository
 class RootViewModel(savedStateHandle: SavedStateHandle): BaseViewModel<RootState>(RootState(), savedStateHandle), IRootViewModel {
 
     companion object {
-        val privateDestinations = listOf(
-            R.id.nav_profile
-
-        )
+        val privateDestinations = listOf(R.id.nav_profile)
     }
 
     private val repository = RootRepository()

@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.activity.viewModels
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
 import androidx.core.view.forEach
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -12,6 +13,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import ru.skillbranch.skillarticles.R
 
@@ -48,12 +50,7 @@ class RootActivity : AppCompatActivity() {
         viewModel.observeNavigation(this, ::handleNavigation)
         navController.addOnDestinationChangedListener { _, destination, args ->
             Log.e("RootActivity", "change destination $destination")
-            viewBinding.navView.menu.forEach { item ->
-                if (destination.matchDestination(item.itemId)) {
-                    item.isChecked = true
-                }
-                //implement select profile icon if auth flow is open
-            }
+            viewBinding.navView.selectDestination(destination)
         }
     }
 
@@ -99,6 +96,10 @@ class RootActivity : AppCompatActivity() {
         }
     }
 
-    private fun NavDestination.matchDestination(@IdRes resId: Int) = hierarchy.any { it.id == resId }
+    private fun BottomNavigationView.selectDestination(destination: NavDestination) {
+        menu.children.find { destination.matchDestination(it.itemId) }?.isChecked = true
+        //implement select profile icon if auth flow is open
+    }
 
+    private fun NavDestination.matchDestination(@IdRes resId: Int) = hierarchy.any { it.id == resId }
 }

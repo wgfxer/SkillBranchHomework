@@ -175,7 +175,9 @@ sealed class NavCommand {
         val options: NavOptions? = null,
         val extras: Navigator.Extras? = null
     ): NavCommand()
+
     data class Action(val action: NavDirections): NavCommand()
+
     data class TopLevel(
         @IdRes val destination: Int,
         val options: NavOptions
