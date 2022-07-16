@@ -2,6 +2,7 @@ import android.util.Log
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import ru.skillbranch.skillarticles.R
 import ru.skillbranch.skillarticles.data.repositories.ArticlesRepository
@@ -29,7 +30,7 @@ class ArticlesViewModel(savedStateHandle: SavedStateHandle) :
                 .setPopEnterAnim(androidx.navigation.ui.R.animator.nav_default_pop_enter_anim)
                 .setPopExitAnim(androidx.navigation.ui.R.animator.nav_default_pop_exit_anim)
 
-            navigate(
+            navigate(//TODO в чем плюс билдера с бандлом ?
                 NavCommand.Builder(
                     R.id.page_article,
                     bundleOf(

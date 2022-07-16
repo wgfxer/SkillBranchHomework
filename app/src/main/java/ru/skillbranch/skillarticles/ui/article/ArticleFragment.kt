@@ -29,7 +29,6 @@ import ru.skillbranch.skillarticles.extensions.format
 import ru.skillbranch.skillarticles.extensions.hideKeyboard
 import ru.skillbranch.skillarticles.extensions.setMarginOptionally
 import ru.skillbranch.skillarticles.ui.BaseFragment
-import ru.skillbranch.skillarticles.ui.IArticleView
 import ru.skillbranch.skillarticles.ui.custom.ArticleSubmenu
 import ru.skillbranch.skillarticles.ui.custom.Bottombar
 import ru.skillbranch.skillarticles.ui.delegates.viewBinding
