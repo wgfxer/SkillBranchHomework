@@ -18,7 +18,7 @@ import ru.skillbranch.skillarticles.extensions.dpToPx
 import ru.skillbranch.skillarticles.ui.custom.spans.*
 
 class MarkdownBuilder(context: Context) {
-    private val colorSecondary = context.attrValue(R.attr.colorSecondary)
+    private val colorSecondary = context.attrValue(android.R.attr.colorSecondary)
     private val colorPrimary = context.attrValue(android.R.attr.colorPrimary)
     private val colorOnSurface = context.attrValue(R.attr.colorOnSurface)
     private val opacityColorSurface = context.getColor(R.color.color_surface)

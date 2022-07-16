@@ -1,6 +1,7 @@
-package ru.skillbranch.skillarticles.viewmodels
+package ru.skillbranch.skillarticles.viewmodels.article
 
 import android.os.Bundle
+import android.util.Log
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
@@ -14,16 +15,23 @@ import ru.skillbranch.skillarticles.extensions.toArticlePersonalInfo
 import ru.skillbranch.skillarticles.extensions.format
 import ru.skillbranch.skillarticles.extensions.indexesOf
 import ru.skillbranch.skillarticles.data.repositories.clearContent
+import ru.skillbranch.skillarticles.ui.article.ArticleFragmentArgs
+import ru.skillbranch.skillarticles.viewmodels.BaseViewModel
+import ru.skillbranch.skillarticles.viewmodels.IArticleViewModel
+import ru.skillbranch.skillarticles.viewmodels.Notify
+import ru.skillbranch.skillarticles.viewmodels.VMState
 
 class ArticleViewModel(
-    private val articleId: String,
     savedStateHandle: SavedStateHandle
 ): BaseViewModel<ArticleState>(ArticleState(), savedStateHandle), IArticleViewModel {
 
     private val repository = ArticleRepository()
     private var clearContent: String? = null
+    private val args: ArticleFragmentArgs = ArticleFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    private val articleId = args.articleId
 
     init {
+        Log.e("ArticleViewModel", "init viewmodel $this")
         subscribeOnDataSource(getArticleData()) { article, state ->
             article ?: return@subscribeOnDataSource null
             state.copy(
@@ -83,7 +91,7 @@ class ArticleViewModel(
         val msg = if (currentState.isLike) {
             Notify.TextMessage("Mark is liked")
         } else {
-            Notify.ActionMessage("Don't like it anymore" , "No, still like it", toggleLike)
+            Notify.ActionMessage("Don't like it anymore", "No, still like it", toggleLike)
         }
         notify(msg)
     }

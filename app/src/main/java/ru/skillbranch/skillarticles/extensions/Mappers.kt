@@ -3,10 +3,10 @@ package ru.skillbranch.skillarticles.extensions
 import ru.skillbranch.skillarticles.data.AppSettings
 import ru.skillbranch.skillarticles.data.ArticlePersonalInfo
 import ru.skillbranch.skillarticles.data.local.User
-import ru.skillbranch.skillarticles.viewmodels.ArticleState
+import ru.skillbranch.skillarticles.viewmodels.article.ArticleState
 
-fun ArticleState.toAppSettings() : AppSettings {
-    return AppSettings(isDarkMode,isBigText)
+fun ArticleState.toAppSettings(): AppSettings {
+    return AppSettings(isDarkMode, isBigText)
 }
 
 fun ArticleState.toArticlePersonalInfo(): ArticlePersonalInfo {
@@ -35,6 +35,7 @@ fun ArticleState.asMap(): Map<String, Any?> = mapOf(
     "poster" to poster,
     "content" to content,
     "reviews" to reviews,
+    // "message" to message,
 )
 
 fun User.asMap(): Map<String, Any?> = mapOf(
@@ -46,8 +47,3 @@ fun User.asMap(): Map<String, Any?> = mapOf(
     "about"  to about
 )
 
-fun List<Pair<Int, Int>>.groupByBounds(bounds: List<Pair<Int, Int>>) =
-    bounds.map { parentRange -> this.filter { parentRange.contains(it) } }
-
-private fun Pair<Int, Int>.contains(other: Pair<Int, Int>) =
-    other.first >= this.first && other.second <= this.second && other.first < other.second

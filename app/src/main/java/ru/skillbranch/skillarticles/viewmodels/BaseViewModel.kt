@@ -2,10 +2,14 @@ package ru.skillbranch.skillarticles.viewmodels
 
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.IdRes
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.core.os.bundleOf
 import androidx.lifecycle.*
+import androidx.navigation.NavDirections
+import androidx.navigation.NavOptions
+import androidx.navigation.Navigator
 import androidx.savedstate.SavedStateRegistryOwner
 import java.io.Serializable
 
@@ -15,6 +19,7 @@ abstract class BaseViewModel<T>(
 ) : ViewModel() where T : VMState {
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val notifications = MutableLiveData<Event<Notify>>()
+    val navigation = MutableLiveData<Event<NavCommand>>()
 
     /***
      * Инициализация начального состояния аргументом конструктоа, и объявления состояния как
@@ -82,6 +87,20 @@ abstract class BaseViewModel<T>(
         notifications.observe(owner, EventObserver { onNotify(it) })
     }
 
+    fun observeNavigation(owner: LifecycleOwner, onNavigate: (navCommands: NavCommand) -> Unit) {
+        navigation.observe(owner, EventObserver { onNavigate(it) })
+    }
+
+    @UiThread
+    protected fun navigate(cmd: NavCommand) {
+        navigation.value = Event(cmd)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.e("BaseViewModel", "onCleared ${this::class.simpleName}")
+    }
+
     /***
      * функция принимает источник данных и лямбда выражение обрабатывающее поступающие данные источника
      * лямбда принимает новые данные и текущее состояние ViewModel в качестве аргументов,
@@ -98,16 +117,6 @@ abstract class BaseViewModel<T>(
 
     fun saveState() {
         //savedStateHandle.set("state", currentState)
-    }
-}
-
-class ViewModelFactory(owner: SavedStateRegistryOwner, private val params: String) : AbstractSavedStateViewModelFactory(owner, bundleOf()) {
-
-    override fun <T : ViewModel?> create(key: String, modelClass: Class<T>, handle: SavedStateHandle): T {
-        if (modelClass.isAssignableFrom(ArticleViewModel::class.java)) {
-            return ArticleViewModel(params, handle) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
@@ -159,8 +168,26 @@ sealed class Notify(val message: String) {
     ) : Notify(msg)
 }
 
-interface VMState: Serializable {
-    fun toBundle(): Bundle
+sealed class NavCommand {
+    data class Builder(
+        @IdRes val destination: Int,
+        val args: Bundle? = null,
+        val options: NavOptions? = null,
+        val extras: Navigator.Extras? = null
+    ): NavCommand()
+    data class Action(val action: NavDirections): NavCommand()
+    data class TopLevel(
+        @IdRes val destination: Int,
+        val options: NavOptions
+    ): NavCommand()
+}
 
-    fun fromBundle(bundle: Bundle): VMState?
+interface VMState: Serializable {
+    fun toBundle(): Bundle {
+        return bundleOf()
+    }
+
+    fun fromBundle(bundle: Bundle): VMState? {
+        return null
+    }
 }

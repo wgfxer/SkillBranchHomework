@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme"
         android:name=".App">
         <activity
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustNothing"
             android:name=".ui.RootActivity"
             android:exported="true">
             <intent-filter>
