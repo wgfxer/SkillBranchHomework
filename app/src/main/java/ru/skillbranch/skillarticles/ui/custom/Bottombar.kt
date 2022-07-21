@@ -40,6 +40,7 @@ class Bottombar(baseContext: Context) :
     @Px
     private val iconPadding = context.dpToIntPx(16)
     private val iconTint = context.getColorStateList(R.color.tint_color)
+    private val minHeight = context.dpToIntPx(56)
 
     //views
     val btnLike: CheckableImageView
@@ -69,6 +70,7 @@ class Bottombar(baseContext: Context) :
             gravity = Gravity.BOTTOM
             insetEdge = Gravity.BOTTOM
         }
+        minimumHeight = minHeight
         val elev = dpToPx(4)
 
         val materialBg = MaterialShapeDrawable.createWithElevationOverlay(context)

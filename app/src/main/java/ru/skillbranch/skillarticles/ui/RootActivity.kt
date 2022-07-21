@@ -39,6 +39,7 @@ class RootActivity : AppCompatActivity() {
         val appbarConfig = AppBarConfiguration(setOf(
             R.id.nav_articles,
             R.id.nav_bookmarks,
+            R.id.nav_transcriptions,
             R.id.nav_profile
         ))
 

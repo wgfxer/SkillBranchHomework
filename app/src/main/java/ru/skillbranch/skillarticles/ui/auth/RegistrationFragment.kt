@@ -26,7 +26,7 @@ class RegistrationFragment: BaseFragment<AuthState, AuthViewModel, FragmentRegis
 
     override fun setupViews() {
         with(viewBinding) {
-            tvPrivacy.setOnClickListener { viewModel.navigateToPrivacy() }
+            tvPrivacy.setOnClickListener { onClickPrivacy() }
             (tvPrivacy.text as Spannable).let { it[0..it.length] = UnderlineSpan(decorColor) }
         }
     }

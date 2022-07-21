@@ -48,11 +48,9 @@ class AuthViewModel(savedStateHandle: SavedStateHandle): BaseViewModel<AuthState
     }
 
     override fun handleRegistration(name: String, login: String, password: String) {
-        TODO("Not yet implemented")
     }
 
     override fun resetErrors() {
-        TODO("Not yet implemented")
     }
 
     private val repository: AuthRepository = AuthRepository()

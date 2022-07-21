@@ -316,10 +316,8 @@ enum class ParseGroup(val expression: String) {
     ITALIC_GROUP("((?<!\\*)\\*[^*].*?[^*]\\*(?!\\*)|(?<!_)_[^_].*?[^_]?_(?!_))"),
     BOLD_GROUP("((?<!\\*)\\*{2}[^*].*?[^*]?\\*{2}(?!\\*)|(?<!_)_{2}[^_].*?[^_]?_{2}(?!_))"),
     BLOCK_CODE_GROUP("((?<!`)`{3}[^\\s][.\\s\\S]*?[^`]`{3}(?!`))"),
-    ORDERED_LIST_ITEM_GROUP("(^[\\d]*\\..*?\$)"),
+    ORDERED_LIST_ITEM_GROUP("(^\\d{1,2}\\.\\s.+?$)"),
     IMAGE_GROUP("(!\\[.*\\]\\(.*\\))");
-
-    val regex = expression.toRegex()
 }
 
 private fun Array<ParseGroup>.toMarkdownGroups(): String {

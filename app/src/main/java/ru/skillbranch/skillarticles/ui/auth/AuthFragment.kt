@@ -22,12 +22,9 @@ class AuthFragment: BaseFragment<AuthState, AuthViewModel, FragmentAuthBinding>(
 
     override fun renderUi(data: AuthState) {
         with(viewBinding) {
-            tvPrivacy.setOnClickListener { viewModel.navigateToPrivacy() }
-            tvRegister.setOnClickListener { viewModel.navigateToRegistration() }
-            btnLogin.setOnClickListener { viewModel.handleLogin(
-                etLogin.text.toString(),
-                etPassword.text.toString()
-            ) }
+            tvPrivacy.setOnClickListener { onClickPrivacy() }
+            tvRegister.setOnClickListener { onClickRegistration() }
+            btnLogin.setOnClickListener { onClickLogin() }
             (tvPrivacy.text as Spannable).let { it[0..it.length] = UnderlineSpan(decorColor) }
             (tvRegister.text as Spannable).let { it[0..it.length] = UnderlineSpan(decorColor) }
         }

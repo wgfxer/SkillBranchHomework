@@ -28,6 +28,12 @@
             android:defaultValue="true" />
     </fragment>
     <fragment
+        android:id="@+id/nav_transcriptions"
+        android:name="ru.skillbranch.skillarticles.ui.transcriptions.TranscriptionsFragment"
+        android:label="@string/title_transcriptions"
+        tools:layout="@layout/fragment_transcriptions" >
+    </fragment>
+    <fragment
         android:id="@+id/nav_profile"
         android:name="ru.skillbranch.skillarticles.ui.profile.ProfileFragment"
         android:label="@string/title_profile"
