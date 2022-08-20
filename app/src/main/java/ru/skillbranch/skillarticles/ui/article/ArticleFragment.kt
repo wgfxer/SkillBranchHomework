@@ -2,11 +2,13 @@ package ru.skillbranch.skillarticles.ui.article
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.graphics.Rect
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatImageView
@@ -17,6 +19,7 @@ import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewbinding.ViewBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
@@ -24,11 +27,14 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions.circleCropTransform
 import com.google.android.material.appbar.AppBarLayout
 import ru.skillbranch.skillarticles.R
+import ru.skillbranch.skillarticles.data.network.res.CommentRes
 import ru.skillbranch.skillarticles.databinding.FragmentArticleBinding
 import ru.skillbranch.skillarticles.extensions.dpToIntPx
 import ru.skillbranch.skillarticles.extensions.format
 import ru.skillbranch.skillarticles.extensions.hideKeyboard
+import ru.skillbranch.skillarticles.extensions.screenHeight
 import ru.skillbranch.skillarticles.extensions.setMarginOptionally
+import ru.skillbranch.skillarticles.extensions.showKeyboard
 import ru.skillbranch.skillarticles.ui.BaseFragment
 import ru.skillbranch.skillarticles.ui.custom.ArticleSubmenu
 import ru.skillbranch.skillarticles.ui.custom.Bottombar
@@ -43,7 +49,7 @@ import ru.skillbranch.skillarticles.viewmodels.article.toSubmenuData
 /**
  * @author Valeriy Minnulin
  */
-class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArticleBinding>(R.layout.fragment_article),
+class ArticleFragment : BaseFragment<ArticleState, ArticleViewModel, FragmentArticleBinding>(R.layout.fragment_article),
     IArticleView {
     override val viewModel: ArticleViewModel by viewModels()
     override val viewBinding: FragmentArticleBinding by viewBinding(FragmentArticleBinding::bind)
@@ -52,6 +58,9 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
     private lateinit var bottombar: Bottombar
     private lateinit var submenu: ArticleSubmenu
     private lateinit var searchView: SearchView
+
+    private var commentsAdapter: CommentAdapter? = null
+
     private val logoSize: Int by lazy { dpToIntPx(40) }
     private val cornerRadius: Int by lazy { dpToIntPx(8) }
     private val args: ArticleFragmentArgs by navArgs()
@@ -75,7 +84,49 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
             tvTitle.text = args.title
             tvAuthor.text = args.author
             tvDate.text = args.date.format()
+
+            etComment.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEND) onClickMessageSend()
+                true
+            }
+
+            etComment.setOnFocusChangeListener { _, hasFocus ->
+                wrapComments.isEndIconVisible = hasFocus
+            }
+            wrapComments.isEndIconVisible = false
+            wrapComments.setEndIconOnClickListener {
+                it.hideKeyboard()
+                etComment.setText("")
+                etComment.clearFocus()
+                viewModel.answerTo(null)
+            }
+
+            with(rvComments) {
+                val maxHeight = screenHeight() - wrapComments.height
+                layoutParams = layoutParams.apply {
+                    height = maxHeight
+                }
+                CommentAdapter(::onSelectComment)
+                    .also { commentsAdapter = it }
+                    .run {
+                        adapter = withLoadStateFooter(
+                            footer = LoadStateItemsAdapter(::retry)
+                        )
+                        layoutManager = LinearLayoutManager(requireContext())
+                    }
+            }
         }
+    }
+
+    override fun onSelectComment(comment: CommentRes) {
+        with(viewBinding.wrapComments) {
+            requestRectangleOnScreen(Rect(0, 0, width, height), false)
+            requireView().postDelayed({
+                viewBinding.etComment.showKeyboard()
+
+            }, 300)
+        }
+        viewModel.answerTo(comment)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +155,6 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
                     viewModel.handleSearch(newText)
                     return true
                 }
-
             })
             setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
                 override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
@@ -123,7 +173,6 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
     }
 
     override fun setupActivityViews() {
-        root.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         root.viewBinding.navView.isVisible = false
         toolbar = root.viewBinding.toolbar
         bottombar = Bottombar(requireContext())
@@ -134,22 +183,40 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
         setupToolbar()
         setupBottombar()
         setupSubmenu()
-
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         root.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         root.viewBinding.navView.isVisible = true
-        toolbar.logo = null
-        toolbar.subtitle = null
         root.viewBinding.coordinatorContainer.removeView(bottombar)
         root.viewBinding.coordinatorContainer.removeView(submenu)
+        commentsAdapter = null
     }
 
     override fun observeViewModelData() {
-        viewModel.observeSubState(this, ArticleState::toSubmenuData, ::renderSubmenu)
-        viewModel.observeSubState(this, ArticleState::toBottombarData, ::renderBotombar)
+        viewModel.observeSubState(viewLifecycleOwner, ArticleState::toSubmenuData, ::renderSubmenu)
+        viewModel.observeSubState(viewLifecycleOwner, ArticleState::toBottombarData, ::renderBotombar)
+
+        viewModel.observeSubState(viewLifecycleOwner, { it.answerName }, ::renderAnswerTo)
+        viewModel.commentPager.observe(viewLifecycleOwner) {
+            commentsAdapter?.submitData(viewLifecycleOwner.lifecycle, it)
+        }
+    }
+
+    override fun renderAnswerTo(answerName: String?) {
+        with(viewBinding.wrapComments) {
+            hint = answerName?.let { "Answer to $answerName" } ?: "Comment"
+        }
+    }
+
+    override fun onClickMessageSend() {
+        with(viewBinding.etComment) {
+            hideKeyboard()
+            clearFocus()
+            viewModel.handleSendMessage(text.toString())
+            setText("")
+        }
     }
 
     override fun setupToolbar() {
@@ -181,12 +248,12 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
             btnSettings.setOnClickListener { viewModel.handleToggleMenu() }
             btnResultUp.setOnClickListener {
                 if (!viewBinding.tvTextContent.hasFocus()) viewBinding.tvTextContent.requestFocus()
-                requireContext().hideKeyboard(it)
+                it.hideKeyboard()
                 viewModel.handleUpResult()
             }
             btnResultDown.setOnClickListener {
                 if (!viewBinding.tvTextContent.hasFocus()) viewBinding.tvTextContent.requestFocus()
-                requireContext().hideKeyboard(it)
+                it.hideKeyboard()
                 viewModel.handleDownResult()
             }
             btnSearchClose.setOnClickListener {
@@ -199,14 +266,14 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
     override fun setupSubmenu() {
         with(submenu) {
             btnTextUp.setOnClickListener { viewModel.handleUpText() }
-            btnTextDown.setOnClickListener{ viewModel.handleDownText() }
+            btnTextDown.setOnClickListener { viewModel.handleDownText() }
             switchMode.setOnClickListener { viewModel.handleNightMode() }
         }
     }
 
-
     override fun renderUi(data: ArticleState) {
-        root.delegate.localNightMode = if (data.isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        root.delegate.localNightMode =
+            if (data.isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
 
         with(viewBinding.tvTextContent) {
             textSize = if (data.isBigText) 18f else 14f
@@ -244,15 +311,19 @@ class ArticleFragment: BaseFragment<ArticleState, ArticleViewModel, FragmentArti
         }
 
         if (data.isSearch) {
+            root.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             showSearchBar(data.resultsCount, data.searchPosition)
             with(toolbar) {
-                (layoutParams as AppBarLayout.LayoutParams).scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
+                (layoutParams as AppBarLayout.LayoutParams).scrollFlags =
+                    AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
             }
         } else {
+            root.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
             hideSearchBar()
             with(toolbar) {
-                (layoutParams as AppBarLayout.LayoutParams).scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
-                    AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED
+                (layoutParams as AppBarLayout.LayoutParams).scrollFlags =
+                    AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED
             }
         }
     }

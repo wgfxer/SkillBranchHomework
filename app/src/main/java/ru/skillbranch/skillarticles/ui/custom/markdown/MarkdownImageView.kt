@@ -242,7 +242,6 @@ class MarkdownImageView private constructor(
 
     override fun onSaveInstanceState(): Parcelable {
         val superState = super.onSaveInstanceState()
-        Log.i("MYTAG", "markdown save")
         val savedState = SavedState(superState)
         savedState.tvAltVisible = tvAlt?.isVisible ?: false
         return savedState
@@ -250,7 +249,6 @@ class MarkdownImageView private constructor(
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         super.onRestoreInstanceState(state)
-        Log.i("MYTAG", "markdown restore")
         if (state is SavedState) {
             tvAlt?.isVisible = state.tvAltVisible
         }

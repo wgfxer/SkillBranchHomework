@@ -127,14 +127,12 @@ class MarkdownContentView @JvmOverloads constructor(
     }
 
     override fun onSaveInstanceState(): Parcelable {
-        Log.i("MYTAG","MarkdownContentView onSaveInstanceState")
         val state = SavedState(super.onSaveInstanceState())
         state.layout = layoutManager
         return state
     }
 
     override fun dispatchSaveInstanceState(container: SparseArray<Parcelable>?) {
-        Log.i("MYTAG","MarkdownContentView dispatchSaveInstanceState")
         children.forEach {
             if (it !is MarkdownTextView) it.saveHierarchyState(layoutManager.container)
         }
@@ -142,7 +140,6 @@ class MarkdownContentView @JvmOverloads constructor(
     }
 
     override fun dispatchRestoreInstanceState(container: SparseArray<Parcelable>?) {
-        Log.i("MYTAG","MarkdownContentView dispatchRestoreInstanceState")
         val superState = container?.get(id) as SavedState
         layoutManager = superState.layout
         children.forEachIndexed { index, view ->
@@ -205,13 +202,11 @@ class MarkdownContentView @JvmOverloads constructor(
 
         constructor(parcel: Parcel) : super(parcel) {
             layout = parcel.readParcelable(this::class.java.classLoader)!!
-            Log.i("MYTAG","MarkdownContent SavedState read from parcel")
         }
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             super.writeToParcel(parcel, flags)
             parcel.writeParcelable(layout, PARCELABLE_WRITE_RETURN_VALUE)
-            Log.i("MYTAG","MarkdownContent SavedState writeToParcel")
 
         }
 
@@ -233,17 +228,14 @@ class MarkdownContentView @JvmOverloads constructor(
         constructor(parcel: Parcel): this(){
             ids = parcel.readSerializable() as LinkedHashMap<Int, Int>
             container = parcel.readSparseArray<Parcelable>(this::class.java.classLoader) as SparseArray<Parcelable>
-            Log.i("MYTAG","LayoutManager read from parcel")
         }
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             parcel.writeSerializable(ids as LinkedHashMap)
             parcel.writeSparseArray(container)
-            Log.i("MYTAG","LayoutManager writeToParcel")
         }
 
         fun attachToParent(view: View, index: Int) {
-            Log.i("MYTAG","attachToParent: ${view.javaClass} index: $index")
             if (container.isEmpty()) {
                 ViewCompat.generateViewId().also {
                     view.id = it
@@ -256,7 +248,6 @@ class MarkdownContentView @JvmOverloads constructor(
         }
 
         fun restoreChild(view: View, index: Int) {
-            Log.i("MYTAG","restoreChild: ${view.javaClass} index: $index")
             view.id = ids[index]!!
             view.restoreHierarchyState(container)
         }

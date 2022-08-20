@@ -3,15 +3,21 @@ package ru.skillbranch.skillarticles.data
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.paging.PagingSource
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.skillbranch.skillarticles.R
 import ru.skillbranch.skillarticles.data.local.User
+import ru.skillbranch.skillarticles.data.network.res.ArticleRes
+import ru.skillbranch.skillarticles.data.network.res.CommentRes
 import ru.skillbranch.skillarticles.viewmodels.articles.ArticleItem
 import java.util.*
+import kotlin.math.max
 
 object LocalDataHolder {
+    private lateinit var dataSource: PagingSource<Int, ArticleItem>
+    private val localArticles = mutableMapOf<String, ArticleItem>()
     private val articleData = MutableLiveData<ArticleData?>()
     private val articleInfo = MutableLiveData<ArticlePersonalInfo?>(null)
     private val settings = MutableLiveData(AppSettings())
@@ -110,21 +116,54 @@ object LocalDataHolder {
             )
         )
     }
+
+    suspend fun loadArticles(offset: Int, limit: Int): List<ArticleItem> {
+        delay(500)
+        return localArticles
+            .values
+            .drop(offset)
+            .take(limit)
+    }
+
+    suspend fun insertArticles(articles: List<ArticleItem>) {
+        val needInvalidate = !localArticles.values.containsAll(articles)
+        localArticles.putAll(articles.associateBy { it.id })
+//        if (needInvalidate) {
+            dataSource.invalidate()
+//            Log.e("DataHolder", "invalidate local $needInvalidate")
+//        }
+    }
+
+    fun attachDataSource(ds: PagingSource<Int, ArticleItem>) {
+        dataSource = ds
+    }
 }
 
 object NetworkDataHolder {
+    private val articles: List<ArticleRes> = EntityGenerator.generateArticles(70)
+    private val comments: Map<String, MutableList<CommentRes>> = articles.associate { article ->
+        article.id to EntityGenerator.generateComments(article.commentCount) as MutableList
+    }
+
+    suspend fun loadComments(articleId: String, offset: Int?, limit: Int): List<CommentRes> {
+        delay(3000)
+        return comments[articleId]
+            ?.drop(max(0, offset ?: 0))
+            ?.take(limit) ?: emptyList()
+    }
+
 
     fun loadArticleContent(articleId: String): LiveData<String?> {
         val content = MutableLiveData<String?>(null)
         GlobalScope.launch {
             delay(500)
-            when (articleId) {
-                "0" -> content.postValue(article1)
-                "1" -> content.postValue(article2)
-                "2" -> content.postValue(article3)
-                "3" -> content.postValue(article4)
-                "4" -> content.postValue(article5)
-                "5" -> content.postValue(article6)
+            when (articleId.toInt() % 6) {
+                0 -> content.postValue(article1)
+                1 -> content.postValue(article2)
+                2 -> content.postValue(article3)
+                3 -> content.postValue(article4)
+                4 -> content.postValue(article5)
+                5 -> content.postValue(article6)
                 else -> content.postValue(article1)
             }
         }
@@ -139,9 +178,42 @@ object NetworkDataHolder {
             about = "something about"
         )
 
-        val token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwY2RiYmYyNjg2Yzg5MDAxZWM2MmI2YSIsInJvbGUiOiJzdXBlcmFkbWluIiwib3duZXIiOiJkb2JyaXktY29mZmVlIiwiaWF0IjoxNjI2NjI1MDA0LCJleHAiOjE2MjcyMjk4MDR9.GmRo7YYCfXFC1haCK1_Fj1zW92fjhm3u3N6mVrLjmc8"
+        val token =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwY2RiYmYyNjg2Yzg5MDAxZWM2MmI2YSIsInJvbGUiOiJzdXBlcmFkbWluIiwib3duZXIiOiJkb2JyaXktY29mZmVlIiwiaWF0IjoxNjI2NjI1MDA0LCJleHAiOjE2MjcyMjk4MDR9.GmRo7YYCfXFC1haCK1_Fj1zW92fjhm3u3N6mVrLjmc8"
 
         return user to token
+    }
+
+    fun sendMessage(articleId: String, message: String, answerId: String?) {
+        val me = User(
+            id = "0",
+            name = "test user",
+            avatar = "https://miro.medium.com/fit/c/96/96/0*zhOjC9mtKiAzmBQo.png",
+            rating = (0..100).random(),
+            respect = (0..300).random()
+        )
+        val comments = comments[articleId]!!
+        val last = comments.last()
+        val nextId = last.id.toInt().inc().toString()
+
+        val answerComment = comments.find { it.id == answerId }
+        val comment = CommentRes(
+            id = nextId,
+            user = me,
+            message = message,
+            date = Date(),
+            slug = "${answerComment?.slug.orEmpty()}$nextId/",
+            answerTo = answerComment?.user?.name
+        )
+        val insertPosition = comments.indexOf(answerComment).let { if ( it == -1) comments.size else it + 1 }
+        comments.add(insertPosition, comment)
+    }
+
+    suspend fun loadArticles(offset: Int?, limit: Int = 10): List<ArticleRes> {
+        delay(3000)
+        return articles
+            .drop(offset ?: 0)
+            .take(limit)
     }
 }
 
@@ -165,21 +237,6 @@ data class ArticlePersonalInfo(
 data class AppSettings(
     val isDarkMode: Boolean = false,
     val isBigText: Boolean = false
-)
-
-data class ArticleItemData(
-    val id: String = "0",
-    val date: Date = Date(),
-    val author: String = "Florina Muntenescu",
-    val authorAvatar: String = "https://miro.medium.com/fit/c/96/96/1*z2H2HkOuv5bAOuIvUUN-5w.jpeg",
-    val title: String = "Drawing a rounded corner background on text",
-    val description: String = "Let’s say that we need to draw a rounded corner background on text, supporting the following cases",
-    val poster: String = "https://miro.medium.com/max/4209/1*GHjquSrfS6bNSjr_rsDSJw.png",
-    val category: String = "Android",
-    val categoryIcon: String = "https://skill-branch.ru/img/mail/bot/android-category.png",
-    val likeCount: Int = 16,
-    val commentCount: Int = 2,
-    val readDuration: Int = 3
 )
 
 val article1: String = """

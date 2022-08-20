@@ -15,4 +15,5 @@
     <item type="id" name="tv_likes_count"/>
     <item type="id" name="tv_comments_count"/>
     <item type="id" name="tv_read_duration"/>
+    <item type="id" name="tv_comment_body"/>
 </resources>

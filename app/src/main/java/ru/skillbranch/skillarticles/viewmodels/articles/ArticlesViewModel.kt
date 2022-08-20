@@ -2,9 +2,18 @@ import android.util.Log
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.liveData
 import ru.skillbranch.skillarticles.R
+import ru.skillbranch.skillarticles.data.LocalDataHolder
+import ru.skillbranch.skillarticles.data.NetworkDataHolder
 import ru.skillbranch.skillarticles.data.repositories.ArticlesRepository
 import ru.skillbranch.skillarticles.viewmodels.BaseViewModel
 import ru.skillbranch.skillarticles.viewmodels.NavCommand
@@ -14,8 +23,24 @@ import ru.skillbranch.skillarticles.viewmodels.articles.IArticlesViewModel
 
 class ArticlesViewModel(savedStateHandle: SavedStateHandle) :
     BaseViewModel<ArticlesState>(ArticlesState(), savedStateHandle), IArticlesViewModel {
-    private val repository: ArticlesRepository = ArticlesRepository()
+    private val repository: ArticlesRepository = ArticlesRepository(local = LocalDataHolder, network = NetworkDataHolder)
     val articles: LiveData<List<ArticleItem>> = repository.findArticles()
+
+    @ExperimentalPagingApi
+    val articlesPager: LiveData<PagingData<ArticleItem>> = Pager(
+        config = PagingConfig(
+            pageSize = 10,
+            initialLoadSize = 10,
+            prefetchDistance = 30,
+            enablePlaceholders = false
+        ),
+        remoteMediator = repository.makeArticlesMediator(),
+        pagingSourceFactory = {
+            repository.makeArticleDataStore()
+        }
+    )
+        .liveData
+        .cachedIn(viewModelScope)
 
     init {
         Log.e("ArticlesViewModel", "init viewmodel ${this::class.simpleName} ${this.hashCode()}")

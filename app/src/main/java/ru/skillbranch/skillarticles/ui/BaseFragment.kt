@@ -36,7 +36,7 @@ abstract class BaseFragment<S, T : BaseViewModel<S>, B: ViewBinding>(@LayoutRes 
         super.onViewCreated(view, savedInstanceState)
         setupViews()
         requireActivity().lifecycle.addObserver(this)
-        viewModel.observeNotifications(viewLifecycleOwner, root::renderNotification)//TODO почему здесь был root ?
+        viewModel.observeNotifications(viewLifecycleOwner, root::renderNotification)
         viewModel.observeNavigation(viewLifecycleOwner, root::handleNavigation)
         viewModel.observeState(viewLifecycleOwner, ::renderUi)
         observeViewModelData()
@@ -55,6 +55,8 @@ abstract class BaseFragment<S, T : BaseViewModel<S>, B: ViewBinding>(@LayoutRes 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     private fun activityInflated() {
         root.viewBinding.appbar.setExpanded(true, true)
+        root.viewBinding.toolbar.logo = null
+        root.viewBinding.toolbar.subtitle = null
         setupActivityViews()
     }
 }

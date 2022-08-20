@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp">
@@ -40,6 +41,8 @@
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="24dp"
         android:textColor="?attr/colorPrimary"
         android:text="Инженеры создали 3D-дисплей "
@@ -63,6 +66,7 @@
         android:id="@+id/iv_category"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        android:layout_marginBottom="16dp"
         android:src="@drawable/logo"
         app:layout_constraintBottom_toBottomOf="@id/iv_poster"
         app:layout_constraintEnd_toStartOf="@id/iv_poster"
@@ -74,14 +78,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="iv_category" />
+        app:constraint_referenced_ids="tv_title,iv_category"
+        android:layout_marginTop="8dp"/>
 
     <TextView
         android:id="@+id/tv_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="@color/color_gray"
+        android:tint="@color/color_gray"
         android:textSize="14sp"
         android:text="Не контент, а дополнительное описание для основного заголовка."
         app:layout_constraintEnd_toEndOf="parent"

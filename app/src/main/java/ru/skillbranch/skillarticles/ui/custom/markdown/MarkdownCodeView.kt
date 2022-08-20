@@ -224,7 +224,6 @@ class MarkdownCodeView private constructor(
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         super.onRestoreInstanceState(state)
-        Log.i("MYTAG", "onRestore markdownCodeView")
         if (state is SavedState) {
             isDark = state.isDarkMode
             isManual = state.isManual
@@ -234,7 +233,6 @@ class MarkdownCodeView private constructor(
 
     override fun onSaveInstanceState(): Parcelable {
         val superState = super.onSaveInstanceState()
-        Log.i("MYTAG", "onSave markdownCodeView")
         val savedState = SavedState(superState)
         savedState.isDarkMode = isDark
         savedState.isManual = isManual

@@ -3,6 +3,7 @@ package ru.skillbranch.skillarticles.viewmodels
 import androidx.lifecycle.LiveData
 import ru.skillbranch.skillarticles.data.ArticleData
 import ru.skillbranch.skillarticles.data.ArticlePersonalInfo
+import ru.skillbranch.skillarticles.data.network.res.CommentRes
 import ru.skillbranch.skillarticles.data.repositories.MarkdownElement
 
 interface IArticleViewModel {
@@ -87,4 +88,8 @@ interface IArticleViewModel {
     fun handleDownResult()
 
     fun handleCopyCode()
+
+    fun handleSendMessage(message: String)
+
+    fun answerTo(comment: CommentRes?)
 }
